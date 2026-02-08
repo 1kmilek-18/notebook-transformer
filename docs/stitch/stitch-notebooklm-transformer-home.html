@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html class="light" lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>NotebookLM Transformer Home</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#137fec",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101922",
+          },
+          fontFamily: { "display": ["Inter"] },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .pipeline-connector { flex-grow: 1; height: 2px; background-color: #dbe0e6; margin: 0 1rem; }
+    .pipeline-connector.active { background-color: #137fec; }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111418] dark:text-gray-100 min-h-screen">
+  <div class="flex flex-col min-h-screen">
+    <!-- Navigation -->
+    <header class="border-b border-solid border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-4">
+      <div class="max-w-[1000px] mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-3xl">auto_awesome_motion</span>
+          <h1 class="text-xl font-bold tracking-tight">NotebookLM Transformer</h1>
+        </div>
+        <div class="flex items-center gap-6">
+          <nav class="hidden md:flex gap-6 text-sm font-medium">
+            <a class="hover:text-primary transition-colors" href="#">Documentation</a>
+            <a class="hover:text-primary transition-colors" href="#">API</a>
+          </nav>
+          <button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
+            <span class="material-symbols-outlined text-sm">terminal</span>
+            GitHub
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center px-4 py-12 md:py-20">
+      <!-- Hero -->
+      <div class="max-w-[800px] text-center mb-12">
+        <h2 class="text-4xl md:text-5xl font-black mb-4 tracking-tight leading-tight">NotebookLM Transformer</h2>
+        <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400">構造解析と再構築で、スライドを編集可能なPowerPointに</p>
+      </div>
+
+      <!-- Main Card -->
+      <div class="w-full max-w-[800px] bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <!-- Upload -->
+        <div class="p-8">
+          <div class="group relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl py-16 px-6 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-5xl text-gray-400 group-hover:text-primary mb-4 transition-colors">upload_file</span>
+            <h3 class="text-lg font-bold mb-1">PDFファイルをドロップするか、クリックして選択</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">PDF (Maximum size 50MB)</p>
+            <button class="bg-primary text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-primary/90 transition-all shadow-md">変換を開始</button>
+          </div>
+        </div>
+
+        <!-- Pipeline -->
+        <div class="px-8 pb-8">
+          <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-800">
+            <div class="flex flex-col items-center gap-2 flex-1">
+              <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
+                <span class="material-symbols-outlined text-xl">account_tree</span>
+              </div>
+              <span class="text-xs font-bold text-primary">構造抽出</span>
+              <span class="text-[10px] text-gray-400">PyMuPDF</span>
+            </div>
+            <div class="pipeline-connector active"></div>
+            <div class="flex flex-col items-center gap-2 flex-1">
+              <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 flex items-center justify-center border-2 border-primary border-t-transparent">
+                <span class="material-symbols-outlined text-xl">psychology</span>
+              </div>
+              <span class="text-xs font-bold text-gray-500">レイアウト解析</span>
+              <span class="text-[10px] text-gray-400">ヒューリスティック + LLM(opt)</span>
+            </div>
+            <div class="pipeline-connector"></div>
+            <div class="flex flex-col items-center gap-2 flex-1">
+              <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 flex items-center justify-center">
+                <span class="material-symbols-outlined text-xl">drive_presentation</span>
+              </div>
+<span class="text-xs font-bold text-gray-400">PPTX構築</span>
+<span class="text-[10px] text-gray-400">python-pptx</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Settings -->
+        <div class="border-t border-gray-100 dark:border-gray-800">
+          <details class="group">
+            <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-gray-500">settings</span>
+                <span class="font-semibold text-sm">詳細設定 (Template & AI)</span>
+              </div>
+              <span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform">expand_more</span>
+            </summary>
+            <div class="px-6 pb-8 space-y-6">
+              <div>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Slide Template</p>
+                <div class="grid grid-cols-2 gap-4">
+                  <label class="relative flex flex-col items-start p-4 border-2 border-primary bg-primary/5 rounded-lg cursor-pointer">
+                    <input checked class="absolute top-4 right-4 text-primary focus:ring-primary" name="template" type="radio"/>
+                    <div class="w-full h-20 bg-white border border-gray-200 rounded mb-2 overflow-hidden"></div>
+                    <span class="text-sm font-bold">Standard (16:9)</span>
+                  </label>
+                  <label class="relative flex flex-col items-start p-4 border-2 border-gray-100 dark:border-gray-800 rounded-lg cursor-pointer hover:border-gray-200">
+                    <input class="absolute top-4 right-4 text-primary focus:ring-primary" name="template" type="radio"/>
+                    <div class="w-full h-20 bg-white border border-gray-200 rounded mb-2 overflow-hidden opacity-50"></div>
+                    <span class="text-sm font-bold text-gray-500">Corporate Wide</span>
+                  </label>
+                </div>
+              </div>
+              <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-primary">analytics</span>
+                  <div>
+                    <p class="text-sm font-bold">AI layout analysis</p>
+                    <p class="text-xs text-gray-500">高度な構造解析を有効にする (推奨)</p>
+                  </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input checked class="sr-only peer" type="checkbox"/>
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                </label>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- Result (success state) -->
+      <div class="w-full max-w-[800px] mt-8 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl p-6 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white">
+            <span class="material-symbols-outlined">check_circle</span>
+          </div>
+          <div>
+            <h4 class="font-bold text-green-800 dark:text-green-300">変換が完了しました</h4>
+            <p class="text-sm text-green-700 dark:text-green-400">presentation_export_v1.pptx (2.4MB)</p>
+          </div>
+        </div>
+        <button class="bg-white dark:bg-gray-900 text-green-700 dark:text-green-300 px-5 py-2.5 rounded-lg font-bold border border-green-200 dark:border-green-800 hover:bg-green-100 transition-colors flex items-center gap-2 shadow-sm">
+          <span class="material-symbols-outlined">download</span>
+          ダウンロード
+        </button>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-900 py-12 px-6">
+      <div class="max-w-[1000px] mx-auto grid md:grid-cols-2 gap-10">
+        <div>
+          <h5 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Core Technology</h5>
+          <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed max-w-md">
+            <span class="font-semibold text-gray-900 dark:text-white">MVP Algorithm:</span><br/>
+            PDFから座標情報を精密抽出し、python-pptxを使用してスライド上の同一座標にオブジェクト（テキストボックス・画像）を再配置します。
+          </p>
+        </div>
+        <div>
+          <h5 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Tech Stack</h5>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-medium">Next.js</span>
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-medium">PyMuPDF</span>
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-medium">python-pptx</span>
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-medium">LLM</span>
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-medium">Tailwind CSS</span>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[1000px] mx-auto mt-10 pt-6 border-t border-gray-100 dark:border-gray-900 flex justify-between items-center text-xs text-gray-400">
+        <p>© 2024 NotebookLM Transformer Project</p>
+        <div class="flex gap-4">
+          <a class="hover:text-primary transition-colors" href="#">Terms</a>
+          <a class="hover:text-primary transition-colors" href="#">Privacy</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

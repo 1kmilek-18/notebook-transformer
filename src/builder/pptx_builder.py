@@ -52,11 +52,14 @@ class PPTXBuilder:
     def build(self, data: PresentationData) -> Presentation:
         """PresentationDataからPowerPointプレゼンテーションを構築する.
 
+        スライドサイズ・各スライドのテキストボックス・画像を座標維持で配置する。
+        テンプレートが指定されていればそのマスターを利用する。
+
         Args:
             data: 抽出・解析済みプレゼンテーションデータ
 
         Returns:
-            python-pptxのPresentationオブジェクト
+            python-pptx の Presentation オブジェクト（save() で保存するまでメモリ上のみ）
         """
         logger.info("PowerPoint構築を開始: %d スライド", len(data.slides))
 
@@ -81,20 +84,32 @@ class PPTXBuilder:
     def save(self, output_path: str | Path) -> Path:
         """構築したプレゼンテーションを保存する.
 
+        出力先の親ディレクトリが存在しない場合は自動作成する。
+        既存ファイルは上書きする。
+
         Args:
-            output_path: 保存先ファイルパス
+            output_path: 保存先ファイルパス（.pptx）
 
         Returns:
-            保存されたファイルのPath
+            保存されたファイルの Path
 
         Raises:
-            RuntimeError: プレゼンテーションが構築されていない場合
+            RuntimeError: build() が呼ばれていない場合
+            OSError: ディレクトリ作成またはファイル書き込みに失敗した場合
         """
         if self._prs is None:
             raise RuntimeError("プレゼンテーションが構築されていません。build()を先に呼び出してください。")
 
         path = Path(output_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
+        parent = path.parent
+        existed = parent.exists()
+        try:
+            parent.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            logger.error("出力ディレクトリの作成に失敗: %s", parent, exc_info=True)
+            raise
+        if not existed:
+            logger.info("出力ディレクトリを作成: %s", parent)
         self._prs.save(str(path))
         logger.info("PowerPointを保存: %s", path)
         return path

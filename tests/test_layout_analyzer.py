@@ -79,3 +79,55 @@ class TestLayoutAnalyzer:
         )
         self.analyzer._analyze_slide_heuristic(slide)
         assert slide.text_blocks[1].element_type == ElementType.BULLET
+
+    def test_body_detection(self) -> None:
+        """箇条書き・タイトルでない通常テキストはbodyと判定."""
+        slide = SlideData(
+            page_number=1,
+            width=720.0,
+            height=405.0,
+            text_blocks=[
+                _make_block("タイトル", 50, 30, 670, 80, font_size=24.0),
+                _make_block("これは本文です。", 50, 120, 670, 200, font_size=14.0),
+            ],
+        )
+        self.analyzer._analyze_slide_heuristic(slide)
+        assert slide.text_blocks[1].element_type == ElementType.BODY
+
+    def test_subtitle_detection(self) -> None:
+        """タイトルより小さく上部にあるテキストはsubtitleと判定."""
+        slide = SlideData(
+            page_number=1,
+            width=720.0,
+            height=405.0,
+            text_blocks=[
+                _make_block("メインタイトル", 50, 20, 670, 70, font_size=28.0),
+                _make_block("サブタイトル", 50, 80, 670, 110, font_size=20.0),
+            ],
+        )
+        self.analyzer._analyze_slide_heuristic(slide)
+        assert slide.text_blocks[1].element_type == ElementType.SUBTITLE
+
+    def test_analyze_presentation_returns_same_object(self) -> None:
+        """analyze_presentation は同一オブジェクトに element_type を付与して返す."""
+        from src.models import PresentationData
+
+        pres = PresentationData(
+            source_path="test.pdf",
+            total_pages=1,
+            slides=[
+                SlideData(
+                    page_number=1,
+                    width=720.0,
+                    height=405.0,
+                    text_blocks=[
+                        _make_block("タイトル", 50, 30, 670, 80, font_size=24.0),
+                        _make_block("本文", 50, 120, 670, 200, font_size=12.0),
+                    ],
+                ),
+            ],
+        )
+        result = self.analyzer.analyze_presentation(pres)
+        assert result is pres
+        assert pres.slides[0].text_blocks[0].element_type == ElementType.TITLE
+        assert pres.slides[0].text_blocks[1].element_type == ElementType.BODY

@@ -59,11 +59,15 @@ class LayoutAnalyzer:
     def analyze_presentation(self, presentation: PresentationData) -> PresentationData:
         """プレゼンテーション全体のレイアウトを解析する.
 
+        各スライドのテキストブロックにヒューリスティックで element_type を付与する。
+        （LLM クライアントが設定されている場合は analyze_slide_with_llm を利用可能だが、
+        本メソッドは現状ヒューリスティックのみ呼び出す。）
+
         Args:
             presentation: 抽出済みプレゼンテーションデータ
 
         Returns:
-            要素タイプが付与されたプレゼンテーションデータ
+            各 TextBlock の element_type が更新された同一オブジェクト
         """
         for slide in presentation.slides:
             self._analyze_slide_heuristic(slide)

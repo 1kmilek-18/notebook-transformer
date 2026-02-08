@@ -20,20 +20,26 @@ from src.analyzer import LayoutAnalyzer
 from src.builder import PPTXBuilder
 from src.extractor import PDFExtractor
 
-console = Console()
-
-# 環境変数の読み込み
+# 環境変数の読み込み（config より前に .env を読む）
 load_dotenv()
 
+console = Console()
 
-def setup_logging(level: str = "INFO") -> None:
+
+def setup_logging(level: str | None = None) -> None:
     """ログの設定を行う.
 
     Args:
-        level: ログレベル（DEBUG, INFO, WARNING, ERROR）
+        level: ログレベル（DEBUG, INFO, WARNING, ERROR）。None の場合は config の log_level を使用。
     """
+    if level is None:
+        try:
+            from config.settings import get_settings
+            level = get_settings().log_level
+        except Exception:
+            level = "INFO"
     logging.basicConfig(
-        level=getattr(logging, level.upper(), logging.INFO),
+        level=getattr(logging, (level or "INFO").upper(), logging.INFO),
         format="%(message)s",
         datefmt="[%X]",
         handlers=[RichHandler(console=console, rich_tracebacks=True)],
@@ -49,15 +55,23 @@ def convert_pdf_to_pptx(
 ) -> Path:
     """PDFファイルをPowerPointに変換する.
 
+    Extractor → Analyzer → Builder の順でパイプラインを実行し、
+    指定した output_path に .pptx を保存する。出力先の親ディレクトリは自動作成する。
+
     Args:
         pdf_path: 入力PDFファイルパス
         output_path: 出力PPTXファイルパス
-        template_path: テンプレートファイルパス（オプション）
-        use_llm: LLMによるレイアウト解析を使用するか
-        save_images: 画像を中間ファイルとして保存するか
+        template_path: テンプレートファイルパス（.potx/.pptx）。None の場合は空白プレゼン
+        use_llm: LLM（Claude API）によるレイアウト解析を使用するか。未設定時はヒューリスティックのみ
+        save_images: 画像を出力先の images/ に中間保存するか
 
     Returns:
-        保存されたPPTXファイルのPath
+        保存されたPPTXファイルの Path
+
+    Raises:
+        FileNotFoundError: 入力PDFが存在しない場合
+        ValueError: PDFが破損している、または読み込みに失敗した場合
+        OSError: 出力ディレクトリの作成またはファイル書き込みに失敗した場合
     """
     logger = logging.getLogger(__name__)
 
@@ -89,11 +103,23 @@ def convert_pdf_to_pptx(
         analyzer: LayoutAnalyzer
         if use_llm:
             try:
+                from config.settings import get_settings
                 import anthropic
 
-                client = anthropic.Anthropic()
-                analyzer = LayoutAnalyzer(anthropic_client=client)
-                logger.info("LLMレイアウト解析を使用")
+                settings = get_settings()
+                api_key = (settings.anthropic_api_key or "").strip()
+                if api_key:
+                    client = anthropic.Anthropic(api_key=api_key)
+                    analyzer = LayoutAnalyzer(
+                        anthropic_client=client,
+                        model=settings.llm_model,
+                    )
+                    logger.info("LLMレイアウト解析を使用")
+                else:
+                    logger.warning(
+                        "ANTHROPIC_API_KEY が未設定です。ヒューリスティック解析を使用します。"
+                    )
+                    analyzer = LayoutAnalyzer()
             except ImportError:
                 logger.warning("anthropicパッケージが見つかりません。ルールベース解析を使用します。")
                 analyzer = LayoutAnalyzer()
@@ -172,6 +198,7 @@ def cli(
     console.print(f"  LLM解析: {'有効' if use_llm else '無効'}")
     console.print()
 
+    logger = logging.getLogger(__name__)
     try:
         result = convert_pdf_to_pptx(
             pdf_path=pdf_path,
@@ -183,10 +210,19 @@ def cli(
         console.print(f"\n[bold green]変換完了![/bold green] → {result}\n")
     except FileNotFoundError as e:
         console.print(f"\n[bold red]エラー:[/bold red] {e}\n")
+        logger.error("ファイルが見つかりません: %s", e)
+        sys.exit(1)
+    except ValueError as e:
+        console.print(f"\n[bold red]エラー:[/bold red] {e}\n")
+        logger.error("入力データの不正: %s", e)
+        sys.exit(1)
+    except OSError as e:
+        console.print(f"\n[bold red]エラー:[/bold red] 出力先の作成または書き込みに失敗しました。{e}\n")
+        logger.exception("出力ディレクトリ作成またはファイル書き込みに失敗")
         sys.exit(1)
     except Exception as e:
         console.print(f"\n[bold red]予期しないエラー:[/bold red] {e}\n")
-        logging.getLogger(__name__).exception("変換処理中にエラーが発生")
+        logger.exception("変換処理中にエラーが発生")
         sys.exit(1)
 
 

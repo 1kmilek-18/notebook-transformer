@@ -9,6 +9,7 @@ anthropic>=0.40.0
 
 # Data models & validation
 pydantic>=2.0.0
+pydantic-settings>=2.0.0
 
 # CLI & UX
 click>=8.1.0
@@ -17,8 +18,5 @@ rich>=13.0.0
 # Configuration
 python-dotenv>=1.0.0
 
-# --- Dev dependencies ---
-# pytest>=8.0.0
-# pytest-cov>=5.0.0
-# ruff>=0.5.0
-# mypy>=1.10.0
+# --- Dev dependencies（開発時は pip install -r requirements.txt でインストール） ---
+pytest>=8.0.0

@@ -31,3 +31,11 @@ class TestCoordinateConversion:
         """1cm = 360000 EMU."""
         assert cm_to_emu(1.0) == 360000
         assert cm_to_emu(2.54) == 914400  # 1インチ ≈ 2.54cm
+
+    def test_pt_to_emu_zero(self) -> None:
+        """0pt = 0 EMU."""
+        assert pt_to_emu(0.0) == 0
+
+    def test_pt_to_emu_rounding(self) -> None:
+        """小数 pt は四捨五入で EMU に変換される."""
+        assert pt_to_emu(1.5) == 19050  # 1.5 * 12700

@@ -58,11 +58,14 @@ cp .env.example .env
 ### 基本的な変換
 
 ```bash
-# PDFをPowerPointに変換
+# PDFをPowerPointに変換（出力は入力ファイル名.pptx で同じディレクトリに保存）
 python -m src.main input/slide.pdf
 
-# 出力先を指定
+# 出力先を指定（親ディレクトリが無い場合は自動作成されます）
 python -m src.main input/slide.pdf -o output/result.pptx
+
+# プロジェクトに含まれるサンプル PDF で試す場合（pdf/ または input/ に .pdf を置く）
+python -m src.main pdf/sample.pdf -o output/out.pptx
 
 # CLIとして実行（pip install -e . 後）
 pdf2pptx input/slide.pdf -o output/result.pptx
@@ -147,11 +150,18 @@ notebooklm-transformer/
 │   └── settings.py             # アプリケーション設定
 ├── tests/
 │   ├── __init__.py
+│   ├── conftest.py              # フィクスチャ（first_sample_pdf 等）
 │   ├── test_models.py
 │   ├── test_coordinate.py
-│   └── test_layout_analyzer.py
+│   ├── test_layout_analyzer.py
+│   ├── test_builder.py          # Builder ユニットテスト
+│   ├── test_extractor.py        # Extractor ユニットテスト（PDF ありで実行）
+│   ├── test_sample_pdf_integration.py  # サンプル PDF による E2E
+│   └── test_integration_errors.py      # CLI エラー経路テスト
+├── docs/                       # 設計・要求・タスク（docs/tasks-sprint.md 等）
 ├── input/                      # 入力PDFファイル置き場
-├── output/                     # 変換結果の出力先
+├── output/                     # 変換結果の出力先（自動作成可）
+├── pdf/                        # サンプルPDF置き場（テスト・手元確認用）
 ├── templates/                  # PPTXテンプレート置き場
 ├── pyproject.toml
 ├── requirements.txt
@@ -177,18 +187,21 @@ notebooklm-transformer/
 ## 開発
 
 ```bash
-# テスト実行
-pytest
+# テスト実行（サンプル PDF が pdf/ または input/ にあると統合テストも実行）
+pytest tests/ -v
 
-# カバレッジ付きテスト
-pytest --cov=src --cov-report=html
+# カバレッジ付きテスト（pytest-cov を入れた場合）
+pytest tests/ --cov=src --cov-report=html
 
-# リンター
+# リンター（ruff を入れた場合）
 ruff check src/ tests/
 
-# 型チェック
+# 型チェック（mypy を入れた場合）
 mypy src/
 ```
+
+- **設計・タスク**: 要求定義やタスク分解は `docs/` を参照（例: `docs/tasks-sprint.md`）。
+- **テスト**: `tests/test_extractor.py` と `tests/test_sample_pdf_integration.py` は、`pdf/` または `input/` に .pdf が無い場合は該当ケースがスキップされます。
 
 ## 座標系について
 
@@ -204,6 +217,17 @@ mypy src/
 - [ ] MCP（Model Context Protocol）サーバー統合
 - [ ] スライドマスター/レイアウトの自動検出
 - [ ] テーブル構造の再構築
+
+## Stitch MCP（オプション）
+
+Cursor から [Google Stitch](https://stitch.withgoogle.com/) のデザインを参照・操作するには、Stitch MCP サーバーを接続できます。
+
+- **MCP 設定**: プロジェクトでは `.cursor/mcp.json` に Stitch サーバーが既に登録されています。
+- **Stitch API の有効化（GCP）**: 未有効の場合は、gcloud ログイン後に以下を実行してください。
+  ```bash
+  ./scripts/enable-stitch-api.sh
+  ```
+  詳細は [docs/MCP-STITCH-SETUP.md](docs/MCP-STITCH-SETUP.md) を参照。参考: [Stitch、リモートStitch MCPサーバーを発表（gihyo.jp）](https://gihyo.jp/article/2026/01/google-stitch-mcp)
 
 ## ライセンス
 

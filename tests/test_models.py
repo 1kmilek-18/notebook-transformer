@@ -77,3 +77,17 @@ class TestPresentationData:
         )
         assert pres.slide_width == 720.0
         assert pres.slide_height == 405.0
+
+    def test_slides_default_empty(self) -> None:
+        pres = PresentationData(source_path="a.pdf", total_pages=0)
+        assert pres.slides == []
+
+
+class TestElementType:
+    """ElementType enum のテスト."""
+
+    def test_title_value(self) -> None:
+        assert ElementType.TITLE.value == "title"
+
+    def test_unknown_value(self) -> None:
+        assert ElementType.UNKNOWN.value == "unknown"

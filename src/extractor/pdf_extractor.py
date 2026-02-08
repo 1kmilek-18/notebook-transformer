@@ -40,9 +40,26 @@ class PDFExtractor:
         self._doc: Optional[fitz.Document] = None
 
     def open(self) -> None:
-        """PDFドキュメントを開く."""
+        """PDFドキュメントを開く.
+
+        Raises:
+            FileNotFoundError: ファイルが存在しない場合（__init__で検証済み）
+            ValueError: PDFが破損している、またはPDFでない場合
+        """
         logger.info("PDFを開いています: %s", self.pdf_path)
-        self._doc = fitz.open(str(self.pdf_path))
+        try:
+            self._doc = fitz.open(str(self.pdf_path))
+        except (RuntimeError, ValueError) as e:
+            raise ValueError(
+                f"PDFの読み込みに失敗しました（破損または非PDFの可能性）: {self.pdf_path}"
+            ) from e
+        except Exception as e:
+            err_msg = str(e).lower()
+            if "cannot open" in err_msg or "invalid" in err_msg or "pdf" in err_msg:
+                raise ValueError(
+                    f"PDFの読み込みに失敗しました: {self.pdf_path}"
+                ) from e
+            raise
         logger.info("ページ数: %d", len(self._doc))
 
     def close(self) -> None:
@@ -68,8 +85,14 @@ class PDFExtractor:
     def extract_all(self) -> PresentationData:
         """全ページからスライドデータを抽出する.
 
+        open() 済みのドキュメントに対して全ページを走査し、
+        テキストブロック・画像・座標を PresentationData に格納して返す。
+
         Returns:
-            PresentationData: プレゼンテーション全体の構造データ
+            PresentationData: プレゼンテーション全体の構造データ（スライド幅・高さ含む）
+
+        Raises:
+            RuntimeError: open() が呼ばれていない場合
         """
         slides: list[SlideData] = []
         for page_num in range(len(self.doc)):

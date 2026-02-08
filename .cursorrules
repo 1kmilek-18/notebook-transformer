@@ -37,3 +37,9 @@ src/
 - PPTXの座標単位はEMU（1インチ = 914400 EMU）
 - 変換式: EMU = pt * 914400 / 72 = pt * 12700
 - NotebookLMのPDFスライドは横長（16:9）が多い
+
+## Musubix MCP
+
+- 新機能の要件・設計から進める場合は、Musubix の `create_requirements` / `create_design` / `create_tasks` を利用する
+- 生成コードの検証には `filter_code` または `check_constitution` を検討する
+- PDF→PPTX 変換ワークフローはスキル `SKILL-PDF2PPTX-001` で実行可能。詳細は `docs/MCP-MUSUBIX-SETUP.md` を参照
