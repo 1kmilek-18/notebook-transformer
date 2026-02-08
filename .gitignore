@@ -22,6 +22,9 @@ env/
 # Environment
 .env
 
+# API temp files (web convert)
+.tmp/
+
 # Output files
 output/*.pptx
 output/*.png

@@ -46,6 +46,31 @@ pip install -r requirements.txt
 pip install -e ".[dev]"
 ```
 
+**注意**: Debian/Ubuntu で `python -m venv .venv` が失敗する場合は、`sudo apt install python3-venv` を実行してから再度お試しください。
+
+### 動作確認
+
+依存関係インストール後、以下で動作確認できます。
+
+```bash
+# 仮想環境を有効化してから
+source .venv/bin/activate   # Linux/Mac
+
+# ヘルプ表示
+python -m src.main --help
+
+# サンプル PDF で変換（pdf/ または input/ に .pdf を置いた場合）
+python -m src.main pdf/sample.pdf -o output/out.pptx
+```
+
+一括で確認する場合はスクリプトを実行してください。
+
+```bash
+./scripts/verify-run.sh
+```
+
+（スクリプトは `pip install -r requirements.txt` 済みの状態で実行してください。）
+
 ### 環境変数の設定（LLM機能を使う場合）
 
 ```bash

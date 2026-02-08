@@ -56,7 +56,7 @@ function StepIndicator({
   );
 }
 
-function usePipelineSimulation() {
+function useConversion() {
   const [stepStatuses, setStepStatuses] = useState<StepStatus[]>([
     "idle",
     "idle",
@@ -64,44 +64,90 @@ function usePipelineSimulation() {
   ]);
   const [result, setResult] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [errorDetail, setErrorDetail] = useState<string>("");
+  const [errorHint, setErrorHint] = useState<string>("");
+  const [pptxBlob, setPptxBlob] = useState<Blob | null>(null);
+  const [pptxFileName, setPptxFileName] = useState<string>("result.pptx");
 
-  const runSimulation = useCallback(() => {
+  const runConversion = useCallback(async (file: File) => {
     setResult("idle");
     setErrorMessage("");
+    setErrorDetail("");
+    setErrorHint("");
+    setPptxBlob(null);
     setStepStatuses(["running", "idle", "idle"]);
 
     const delay = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
 
-    (async () => {
-      try {
-        await delay(1200);
-        setStepStatuses((s) => ["done", "running", "idle"]);
-        await delay(1500);
-        setStepStatuses((s) => ["done", "done", "running"]);
-        await delay(1000);
-        setStepStatuses((s) => ["done", "done", "done"]);
-        setResult("success");
-      } catch {
-        setStepStatuses((s) => {
-          const next = [...s];
-          const i = next.findIndex((x) => x === "running");
-          if (i >= 0) next[i] = "error";
-          return next;
-        });
-        setErrorMessage("変換中にエラーが発生しました");
+    try {
+      await delay(400);
+      setStepStatuses((s) => ["done", "running", "idle"]);
+      await delay(400);
+      setStepStatuses((s) => ["done", "done", "running"]);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/convert", {
+        method: "POST",
+        body: formData,
+      });
+
+      await delay(300);
+      setStepStatuses((s) => ["done", "done", "done"]);
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setErrorMessage(data.error ?? "変換に失敗しました");
+        setErrorDetail(data.detail ?? "");
+        setErrorHint(data.hint ?? "");
         setResult("error");
+        return;
       }
-    })();
+
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition");
+      const nameMatch = disposition?.match(/filename\*?=(?:UTF-8'')?"?([^";\n]+)"?/i) ?? disposition?.match(/filename="?([^";\n]+)"?/i);
+      const fileName = nameMatch ? decodeURIComponent(nameMatch[1].trim()) : file.name.replace(/\.pdf$/i, ".pptx");
+
+      setPptxBlob(blob);
+      setPptxFileName(fileName);
+      setResult("success");
+    } catch (e) {
+      setStepStatuses((s) => {
+        const next = [...s];
+        const i = next.findIndex((x) => x === "running");
+        if (i >= 0) next[i] = "error";
+        return next;
+      });
+      setErrorMessage(e instanceof Error ? e.message : "変換中にエラーが発生しました");
+      setErrorDetail("");
+      setErrorHint("");
+      setResult("error");
+    }
   }, []);
+
+  const downloadPptx = useCallback(() => {
+    if (!pptxBlob) return;
+    const url = URL.createObjectURL(pptxBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = pptxFileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [pptxBlob, pptxFileName]);
 
   const reset = useCallback(() => {
     setStepStatuses(["idle", "idle", "idle"]);
     setResult("idle");
     setErrorMessage("");
+    setErrorDetail("");
+    setErrorHint("");
+    setPptxBlob(null);
   }, []);
 
-  return { stepStatuses, result, errorMessage, runSimulation, reset };
+  return { stepStatuses, result, errorMessage, errorDetail, errorHint, pptxBlob, pptxFileName, runConversion, downloadPptx, reset };
 }
 
 export default function Home() {
@@ -115,9 +161,14 @@ export default function Home() {
     stepStatuses,
     result,
     errorMessage,
-    runSimulation,
+    errorDetail,
+    errorHint,
+    pptxBlob,
+    pptxFileName,
+    runConversion,
+    downloadPptx,
     reset,
-  } = usePipelineSimulation();
+  } = useConversion();
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -143,8 +194,8 @@ export default function Home() {
 
   const startConversion = useCallback(() => {
     if (!file) return;
-    runSimulation();
-  }, [file, runSimulation]);
+    runConversion(file);
+  }, [file, runConversion]);
 
   const clearFile = useCallback(() => {
     setFile(null);
@@ -296,17 +347,14 @@ export default function Home() {
               変換が完了しました
             </p>
             <p className="mt-1 text-sm text-foreground/90">
-              {file?.name.replace(/\.pdf$/i, "") ?? "result"}.pptx
-            </p>
-            <p className="mt-3 text-xs text-muted">
-              実際の変換はCLIから実行してください。Web API連携は今後対応予定です。
+              {pptxFileName}
             </p>
             <div className="mt-5 flex gap-3">
               <button
                 type="button"
-                disabled
-                className="rounded-xl bg-success/80 px-4 py-2.5 text-sm font-medium text-white opacity-60"
-                title="API連携後に有効になります"
+                onClick={downloadPptx}
+                disabled={!pptxBlob}
+                className="rounded-xl bg-success px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-success/90 disabled:opacity-50"
               >
                 ダウンロード
               </button>
@@ -329,9 +377,19 @@ export default function Home() {
             <p className="mt-1 text-sm text-foreground/90">
               {errorMessage}
             </p>
+            {errorHint && (
+              <p className="mt-2 text-sm font-medium text-foreground/90">
+                {errorHint}
+              </p>
+            )}
+            {errorDetail && (
+              <pre className="mt-3 max-h-40 overflow-auto rounded-lg bg-black/10 p-3 text-xs text-foreground/80 whitespace-pre-wrap break-words">
+                {errorDetail}
+              </pre>
+            )}
             <button
               type="button"
-              onClick={runSimulation}
+              onClick={() => file && runConversion(file)}
               className="mt-4 rounded-xl bg-error/90 px-4 py-2.5 text-sm font-medium text-white hover:bg-error"
             >
               再試行
